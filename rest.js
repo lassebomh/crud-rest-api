@@ -1,23 +1,23 @@
-const http = require('http');
+const http = require('http')
 const uuid = require('uuid').v4
 
-const api = {
+const apiRoute = {
     'v1': {
         'article': {
-            '_get': (req, db, res) => {
+            'GET': (req, db, res) => {
 
             },
             '_index': {
-                '_get': (req, db, res) => {
+                'GET': (req, db, res) => {
 
                 },
                 "comment": {
-                    '_get': {
+                    'GET': {
                         
                     }
                 },
                 'customFunction': {
-                    '_get': (req, db, res) => {
+                    'GET': (req, db, res) => {
 
                     }
                 }
@@ -36,8 +36,7 @@ let tmp = {
 }
 
 function parseCookie(cookie) {
-    //blah regex have fun
-
+    //todo: Validate Cookie with regex
     return Object.fromEntries(cookie.split(';').map((entry) => entry.split('=')))
 }
 
@@ -45,20 +44,23 @@ http.createServer((req, res) => {
     try {
         if (req.headers.cookie !== undefined) {
             const cookie = parseCookie(req.headers.cookie)
-            if (tmp.sessionIds.indexOf(cookie.session_id) !== -1) {
-                // console.log('Valid Cookie! 200 Leet');
-            } else {
-                // console.log('Your cookie is invalid!');
+            if (tmp.sessionIds.indexOf(cookie.session_id) !== -1) {// Valid session_id
+            } else { // Invalid / expired session_id
                 tmp.sessionIds.push(uuid())
                 res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
             } 
-        } else {
-            // console.log('No cookie! Giving cookie!');
+        } else { // No session_id
             tmp.sessionIds.push(uuid())
             res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
         }
         
-        
+        if (1) { // Determine if it's an api call
+
+        } else if (1) { // Determine if it's an resource call
+
+        } else { // Invalid call!
+            throw 400;
+        }
 
         res.writeHead(200, {'Content-Type': "text/html"})
         res.end()
