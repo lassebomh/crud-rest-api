@@ -1,29 +1,59 @@
+// NPM packages
 const http = require('http')
 const uuid = require('uuid').v4
+const fs = require('fs')
+
+// Modules
+const mimeTypes = require('./mimetypes.json')
+
+// const rights = require('./modules/rights.js')
+
+// console.log(rights);
+
+// function wrap(wrapper, func) {
+//     return (...props) => {
+//         wrapper(...props);
+//         func(...props)
+//     }
+// }
+
+// Wrapping example
+//
+// var runMeYes = wrap((req, res, db) => {
+//     console.log('wrapped', req, res, db)
+//     }, (req, res, db) => {
+//     console.log(req, res, db);
+// })
+//
+//runMeYes('a', 'b', 'c')
+
+
 
 const apiRoute = {
     'v1': {
         'article': {
-            'GET': (req, db, res) => {
-
+            'GET': (req, res, db) => {
+                console.log('v1 article get');
             },
             '_index': {
-                'GET': (req, db, res) => {
-
+                'GET': (req, res, db) => {
+                    console.log('v1 article index get');
                 },
                 "comment": {
-                    'GET': {
-                        
+                    '_index': {
+                        'GET': (req, res, db) => {
+                            console.log('v1 article index comment index get');
+                        }
                     }
                 },
                 'customFunction': {
-                    'GET': (req, db, res) => {
-
+                    'GET': (req, res, db) => {
+                        console.log('v1 article index customFunction');
                     }
                 }
             },
-            'customFunction': (req, db, res) => {
-
+            'customFunction': (req, res, db) => {
+                console.log('v1 article customFunction');
             }
         }
     }
@@ -40,6 +70,8 @@ function parseCookie(cookie) {
     return Object.fromEntries(cookie.split(';').map((entry) => entry.split('=')))
 }
 
+
+
 http.createServer((req, res) => {
     try {
         if (req.headers.cookie !== undefined) {
@@ -54,17 +86,55 @@ http.createServer((req, res) => {
             res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
         }
         
-        if (1) { // Determine if it's an api call
+        if (req.url.slice(0, 5) === '/api/') { // Api call todo: regex check
 
-        } else if (1) { // Determine if it's an resource call
+            let fnDir = req.url.match(/\/((\/?[\w]+)+)\??.*/)[1].split('/').slice(1)
+            fnDir = fnDir.map(call => /\w*[A-Z][0-9]\w*/.test(call) ? '_index' : call)
+            fnDir.push(req.method.match(/^(GET|POST|PUT|DELETE)$/)[0])
+
+            function iter(obj, dirs) {
+                return typeof obj[dirs[0]] === "object" ? iter(obj[dirs[0]], dirs.slice(1)) : obj[dirs[0]]
+            }
+
+            iter(apiRoute, fnDir)()
+
+            res.writeHead(200, {'Content-Type': "text/html"})
+            res.end()
+
+        } else if (1) { // Resource call todo: regex check
+
+            // let requestLocation = ""
+            // const re = req.url.match(/\/[\w\.]+$/)
+            // if (re != null && fs.existsSync('./www/_public'+re[0])){
+            //     requestLocation = './www/_public'+req.url.match(/\/[\w\.]+$/)[0]
+            // } else if (req.url === '/') {
+            //     requestLocation = './www/index.html'
+            // } else {
+            //     const re = req.url.match(/\/([\w-]+)\/$/)
+            //     requestLocation = './www' + req.url + (req.url[req.url.length-1] === '/' ? re[1]+'.html' : '')
+            // }
+            // if (!fs.existsSync(requestLocation)) {throw [404, `Cannot find ${req.url}`]; }
+    
+            // res.setHeader('Content-Type', mimeTypes[requestLocation.match(/\.\w+$/)[0]])
+            // res.end(fs.readFileSync(requestLocation))
+            
+            console.log(req.url);
+            
+            let reqdir = "./www"
+            if (req.url === "/") {
+                reqdir += '/index.html'
+            } else {
+                reqdir += req.url
+            }
+
+            console.log(reqdir);
+
+            res.setHeader('Content-Type', mimeTypes[reqdir.match(/\.\w+$/)[0]])
+            res.end(fs.readFileSync(reqdir))
 
         } else { // Invalid call!
             throw 400;
         }
-
-        res.writeHead(200, {'Content-Type': "text/html"})
-        res.end()
-
 
     } catch(err) {
         let error = [500]
