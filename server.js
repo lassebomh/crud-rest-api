@@ -106,27 +106,11 @@ http.createServer((req, res) => {
 
             iter(apiRoute, fnDir)()
 
-            res.writeHead(200, {'Content-Type': "text/html"})
+            res.writeHead(200, {'Content-Type': "application/json"})
             res.end()
 
         } else if (1) { // Resource call todo: regex check
 
-            // let requestLocation = ""
-            // const re = req.url.match(/\/[\w\.]+$/)
-            // if (re != null && fs.existsSync('./www/_public'+re[0])){
-            //     requestLocation = './www/_public'+req.url.match(/\/[\w\.]+$/)[0]
-            // } else if (req.url === '/') {
-            //     requestLocation = './www/index.html'
-            // } else {
-            //     const re = req.url.match(/\/([\w-]+)\/$/)
-            //     requestLocation = './www' + req.url + (req.url[req.url.length-1] === '/' ? re[1]+'.html' : '')
-            // }
-            // if (!fs.existsSync(requestLocation)) {throw [404, `Cannot find ${req.url}`]; }
-    
-            // res.setHeader('Content-Type', mimeTypes[requestLocation.match(/\.\w+$/)[0]])
-            // res.end(fs.readFileSync(requestLocation))
-
-            
             if (req.url === "/") {
                 var fileDir = ['root.html']
             } else {
@@ -143,11 +127,11 @@ http.createServer((req, res) => {
             }
 
             function iter(obj, dirs) {
-                return (/.+\/[\w\_\-\.]+\.\w+$/.test(dirs[0])) ? iter(obj[dirs[0]], dirs.slice(1)) : obj[dirs[0]]
+                return !(/\.\w+$/.test(dirs[0])) ? iter(obj[dirs[0]], dirs.slice(1)) : obj[dirs[0]]
             }
 
             res.setHeader('Content-Type', mimeTypes[fileDir[fileDir.length - 1].match(/\.\w+$/)[0]])
-            res.end(iter(wwwRoute, fileDir))//(fs.readFileSync(reqdir))
+            res.end(iter(wwwRoute, fileDir))
 
         } else { // Invalid call!
             throw 400;
