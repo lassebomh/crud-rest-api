@@ -130,8 +130,14 @@ http.createServer((req, res) => {
                 return !(/\.\w+$/.test(dirs[0])) ? iter(obj[dirs[0]], dirs.slice(1)) : obj[dirs[0]]
             }
 
+            try {
+                var file = iter(wwwRoute, fileDir)
+            } catch(err) {
+                throw 404
+            }
+
             res.setHeader('Content-Type', mimeTypes[fileDir[fileDir.length - 1].match(/\.\w+$/)[0]])
-            res.end(iter(wwwRoute, fileDir))
+            res.end(file)
 
         } else { // Invalid call!
             throw 400;
