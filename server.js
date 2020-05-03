@@ -1,6 +1,7 @@
 // NPM packages
 const http = require('http')
 const uuid = require('uuid').v4
+const path = require('path')
 const fs = require('fs')
 
 // Modules
@@ -26,8 +27,6 @@ const mimeTypes = require('./mimetypes.json')
 // })
 //
 //runMeYes('a', 'b', 'c')
-
-
 
 const apiRoute = {
     'v1': {
@@ -59,6 +58,17 @@ const apiRoute = {
     }
 }
 
+function objectifyDirectory(dir) {
+    let object = {}
+    fs.readdirSync(dir).forEach( f => {
+        let dirPath = path.join(dir, f)
+        object[f] = fs.statSync(dirPath).isDirectory() ? objectifyDirectory(dirPath) : object[f] = fs.readFileSync(path.join(dir, f))
+    })
+    return object
+};
+
+const wwwRoute = objectifyDirectory('./www/');
+
 let tmp = {
     sessionIds: [
         
@@ -69,8 +79,6 @@ function parseCookie(cookie) {
     //todo: Validate Cookie with regex
     return Object.fromEntries(cookie.split(';').map((entry) => entry.split('=')))
 }
-
-
 
 http.createServer((req, res) => {
     try {
@@ -117,20 +125,29 @@ http.createServer((req, res) => {
     
             // res.setHeader('Content-Type', mimeTypes[requestLocation.match(/\.\w+$/)[0]])
             // res.end(fs.readFileSync(requestLocation))
+
             
-            console.log(req.url);
-            
-            let reqdir = "./www"
             if (req.url === "/") {
-                reqdir += '/index.html'
+                var fileDir = ['root.html']
             } else {
-                reqdir += req.url
+                // reqdir += req.url + (req.url[req.url.length - 1] === '/' ? req.url.match(/.*\/(.+)\/$/)[1]+'.html' : '')
+
+                var fileDir = req.url.match(/\/((\/?[\w\.]+)+)\??.*/)[1].split('/')
+                fileDir = fileDir.map(call => /\w*[A-Z][0-9]\w*/.test(call) ? '_index' : call)
+
+                if (/.+\/?[\w\_\-\.]+\.\w+$/.test(fileDir[fileDir.length - 1])){
+
+                } else {
+                    fileDir.push(fileDir[fileDir.length - 1] + '.html')
+                }
             }
 
-            console.log(reqdir);
+            function iter(obj, dirs) {
+                return (/.+\/[\w\_\-\.]+\.\w+$/.test(dirs[0])) ? iter(obj[dirs[0]], dirs.slice(1)) : obj[dirs[0]]
+            }
 
-            res.setHeader('Content-Type', mimeTypes[reqdir.match(/\.\w+$/)[0]])
-            res.end(fs.readFileSync(reqdir))
+            res.setHeader('Content-Type', mimeTypes[fileDir[fileDir.length - 1].match(/\.\w+$/)[0]])
+            res.end(iter(wwwRoute, fileDir))//(fs.readFileSync(reqdir))
 
         } else { // Invalid call!
             throw 400;
