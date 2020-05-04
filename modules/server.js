@@ -5,28 +5,7 @@ const path = require('path')
 const fs = require('fs')
 
 // Modules
-const mimeTypes = require('./mimetypes.json')
-
-// const rights = require('./modules/rights.js')
-
-// console.log(rights);
-
-// function wrap(wrapper, func) {
-//     return (...props) => {
-//         wrapper(...props);
-//         func(...props)
-//     }
-// }
-
-// Wrapping example
-//
-// var runMeYes = wrap((req, res, db) => {
-//     console.log('wrapped', req, res, db)
-//     }, (req, res, db) => {
-//     console.log(req, res, db);
-// })
-//
-//runMeYes('a', 'b', 'c')
+const mimeTypes = require('./../mimetypes.json')
 
 const apiRoute = {
     'v1': {
@@ -76,7 +55,6 @@ let tmp = {
 }
 
 function parseCookie(cookie) {
-    //todo: Validate Cookie with regex
     return Object.fromEntries(cookie.split(';').map((entry) => entry.split('=')))
 }
 
