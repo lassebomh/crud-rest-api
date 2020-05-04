@@ -72,7 +72,7 @@ http.createServer((req, res) => {
             res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
         }
         
-        if (req.url.slice(0, 5) === '/api/') { // Api call todo: regex check
+        if (/^\/api\/([\w-_]+\/)+([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)?$/.test(req.url)) { // Api call todo: regex check
 
             let fnDir = req.url.match(/\/((\/?[\w]+)+)\??.*/)[1].split('/').slice(1)
             fnDir = fnDir.map(call => /\w*[A-Z][0-9]\w*/.test(call) ? '_index' : call)
@@ -87,7 +87,7 @@ http.createServer((req, res) => {
             res.writeHead(200, {'Content-Type': "application/json"})
             res.end()
 
-        } else if (1) { // Resource call todo: regex check
+        } else if (/^\/([\w-_]+\/)*([\w-_\.]+)?$/.test(req.url)) { // Resource call todo: regex check
 
             if (req.url === "/") {
                 var fileDir = ['root.html']
@@ -113,6 +113,7 @@ http.createServer((req, res) => {
             } catch(err) {
                 throw 404
             }
+            if (file === undefined) throw 404;
 
             res.setHeader('Content-Type', mimeTypes[fileDir[fileDir.length - 1].match(/\.\w+$/)[0]])
             res.end(file)
