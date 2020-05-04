@@ -44,7 +44,7 @@ const apiRoute = {
                             console.log('v1 article index comment index get');
                         }
                     }
-                },da
+                },
                 'customFunction': {
                     'GET': (req, res, db) => {
                         console.log('v1 article index customFunction');
