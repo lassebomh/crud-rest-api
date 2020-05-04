@@ -1,5 +1,5 @@
 # What is this?
-A stateless RESTful NodeJS backend. The goal is to follow good design principles that makes the backend scalable and fun to develop in. This repository is only an api template, so you are free to fork the ```stable``` branch if you want to use it yourself.
+A stateless RESTful NodeJS backend template. The goal is to follow good design principles that makes the backend scalable and fun to develop in. This repository is only an api template, so you are free to fork the ```stable``` branch if you want to use it yourself.
 # Why?
 Backend API's have a tendency to become extremely unorganized when the scope of the project increases. This is why we have design patterns such as CRUD and REST. A typical example of how one could make his/her api functions would be like this:
 | Url |
