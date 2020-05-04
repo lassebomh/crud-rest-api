@@ -5,9 +5,9 @@ Backend API's have a tendency to become extremely unorganized when the scope of 
 | Url |
 | - |
 | `/api/getArticle?id=N8k2` |
-| `/api/getArticleComment?article_id=N8k2&comment_id=3fA8` |
-| `/api/updateArticleComment?article_id=N8k2&comment_id=3fA8` |
-| `/api/removeArticleComment?article_id=N8k2&comment_id=3fA8` |
+| `/api/getArticleComment?article_id=N8k2&comment_id=1` |
+| `/api/updateArticleComment?article_id=N8k2&comment_id=2` |
+| `/api/removeArticleComment?article_id=N8k2&comment_id=3` |
 | `/api/newArticleComment?article_id=N8k2` |
 
 This is bad. Sure, this might work OK when your project is tiny, but it will only take a couple of features to make this list completely un-navigatable and annoying to work with. The code has been written with this problem in mind, and the solution looks a little something like this:
