@@ -47,6 +47,7 @@ db.once('open', function() {
 });
 
 
+
 function objectifyDirectory(dir) {
     let object = {}
     fs.readdirSync(dir).forEach( f => {
