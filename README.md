@@ -19,7 +19,7 @@ This is bad. Sure, this might work OK when your project is tiny, but it will onl
 | `/api/article/N8k2/comment/3` | DELETE |
 | `/api/article/N8k2/comment/new` | POST |
 
-How organized! This doesn't just make it easier to use for the consumer of the API, it also makes it more convenient for the person developing the API to find what functions are assocated with an asset, because all the functions associated with that asset will be found in its personal scope.
+How organized! This doesn't just make it easier to use for the consumer of the API, it also makes it more convenient for the person developing the API to find what functions are assocated with an asset, because all those functions will be found in that asset's personal scope.
 
 Another advantage is that we now properly communicate what the browser is allowed to do with the response. GET requests are for an example cachable. This allows the browser to cache the result of `/article/N8k2/comment/3`.
 
