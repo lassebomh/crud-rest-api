@@ -3,6 +3,7 @@ const http = require('http')
 const uuid = require('uuid').v4
 const path = require('path')
 const fs = require('fs')
+const MongoClient = require('mongodb').MongoClient;
 
 // Modules
 const mimeTypes = require('./../mimetypes.json')
@@ -58,21 +59,30 @@ function parseCookie(cookie) {
     return Object.fromEntries(cookie.split(';').map((entry) => entry.split('=')))
 }
 
+const validFileRequestUrl = /^\/([\w]+\/)*(([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)|([\w\.\_\-]+\.\w+))?$/
+
+const validApiRequestUrl = /^\/api\/([\w-_]+\/)+([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)?$/
+
 http.createServer((req, res) => {
     try {
-        if (req.headers.cookie !== undefined) {
-            const cookie = parseCookie(req.headers.cookie)
-            if (tmp.sessionIds.indexOf(cookie.session_id) !== -1) {// Valid session_id
-            } else { // Invalid / expired session_id
+        if (validApiRequestUrl.test(req.url) || validFileRequestUrl.test(req.url) ) {
+            console.log(req.headers.cookie);
+            if (req.headers.cookie !== undefined) {
+                const cookie = parseCookie(req.headers.cookie)
+                if (tmp.sessionIds.indexOf(cookie.session_id) !== -1) {// Valid session_id
+                } else { // Invalid / expired session_id
+                    tmp.sessionIds.push(uuid())
+                    res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1]+'; path=/')
+                } 
+            } else { // No session_id
                 tmp.sessionIds.push(uuid())
-                res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
-            } 
-        } else { // No session_id
-            tmp.sessionIds.push(uuid())
-            res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
+                res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1]+'; path=/')
+            }
+        } else {
+            throw [400, "Invalid URL"];
         }
         
-        if (/^\/api\/([\w-_]+\/)+([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)?$/.test(req.url)) { // Api call todo: regex check
+        if (validApiRequestUrl.test(req.url)) { // Api call todo: regex check
 
             let fnDir = req.url.match(/\/((\/?[\w]+)+)\??.*/)[1].split('/').slice(1)
             fnDir = fnDir.map(call => /\w*[A-Z][0-9]\w*/.test(call) ? '_index' : call)
@@ -87,7 +97,7 @@ http.createServer((req, res) => {
             res.writeHead(200, {'Content-Type': "application/json"})
             res.end()
 
-        } else if (/^\/([\w-_]+\/)*([\w-_\.]+)?$/.test(req.url)) { // Resource call todo: regex check
+        } else if (validFileRequestUrl.test(req.url)) { // Resource call todo: regex check
 
             if (req.url === "/") {
                 var fileDir = ['root.html']
@@ -118,8 +128,6 @@ http.createServer((req, res) => {
             res.setHeader('Content-Type', mimeTypes[fileDir[fileDir.length - 1].match(/\.\w+$/)[0]])
             res.end(file)
 
-        } else { // Invalid call!
-            throw 400;
         }
 
     } catch(err) {
@@ -133,7 +141,6 @@ http.createServer((req, res) => {
         res.writeHead(...error)
         res.end()
     }
-
 }).listen(5000);
 
 console.log('[running] Hosting on http://localhost:5000');
