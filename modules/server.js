@@ -3,7 +3,7 @@ const http = require('http')
 const uuid = require('uuid').v4
 const path = require('path')
 const fs = require('fs')
-const MongoClient = require('mongodb').MongoClient;
+const mongoose = require('mongoose')
 
 // Modules
 const mimeTypes = require('./../mimetypes.json')
@@ -38,6 +38,15 @@ const apiRoute = {
     }
 }
 
+
+mongoose.connect('mongodb://localhost/nosql-node-backend', { useNewUrlParser: true, useUnifiedTopology: true});
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  // we're connected!
+});
+
+
 function objectifyDirectory(dir) {
     let object = {}
     fs.readdirSync(dir).forEach( f => {
@@ -60,13 +69,11 @@ function parseCookie(cookie) {
 }
 
 const validFileRequestUrl = /^\/([\w]+\/)*(([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)|([\w\.\_\-]+\.\w+))?$/
-
 const validApiRequestUrl = /^\/api\/([\w-_]+\/)+([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)?$/
 
 http.createServer((req, res) => {
     try {
         if (validApiRequestUrl.test(req.url) || validFileRequestUrl.test(req.url) ) {
-            console.log(req.headers.cookie);
             if (req.headers.cookie !== undefined) {
                 const cookie = parseCookie(req.headers.cookie)
                 if (tmp.sessionIds.indexOf(cookie.session_id) !== -1) {// Valid session_id
@@ -136,7 +143,7 @@ http.createServer((req, res) => {
             console.error(err)
         } else {
             error = Number.isInteger(err) ? [err] : err
-            console.error("Error "+error[0]+': '+error[1])
+            console.error(req.url+" "+error[0]+(error[1] ? " "+error[1] : "" ))
         }
         res.writeHead(...error)
         res.end()
