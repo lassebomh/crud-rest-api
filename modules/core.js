@@ -7,36 +7,7 @@ const mongoose = require('mongoose')
 
 // Modules
 const mimeTypes = require('./../mimetypes.json')
-
-const apiRoute = {
-    'v1': {
-        'article': {
-            'GET': (req, res, db) => {
-                console.log('v1 article get');
-            },
-            '_index': {
-                'GET': (req, res, db) => {
-                    console.log('v1 article index get');
-                },
-                "comment": {
-                    '_index': {
-                        'GET': (req, res, db) => {
-                            console.log('v1 article index comment index get');
-                        }
-                    }
-                },
-                'customFunction': {
-                    'GET': (req, res, db) => {
-                        console.log('v1 article index customFunction');
-                    }
-                }
-            },
-            'customFunction': (req, res, db) => {
-                console.log('v1 article customFunction');
-            }
-        }
-    }
-}
+const apiRoute = require('./api.js')
 
 
 mongoose.connect('mongodb://localhost/nosql-node-backend', { useNewUrlParser: true, useUnifiedTopology: true});
@@ -90,7 +61,7 @@ http.createServer((req, res) => {
             throw [400, "Invalid URL"];
         }
         
-        if (validApiRequestUrl.test(req.url)) { // Api call todo: regex check
+        if (validApiRequestUrl.test(req.url)) {
 
             let fnDir = req.url.match(/\/((\/?[\w]+)+)\??.*/)[1].split('/').slice(1)
             fnDir = fnDir.map(call => /\w*[A-Z][0-9]\w*/.test(call) ? '_index' : call)
@@ -100,12 +71,9 @@ http.createServer((req, res) => {
                 return typeof obj[dirs[0]] === "object" ? iter(obj[dirs[0]], dirs.slice(1)) : obj[dirs[0]]
             }
 
-            iter(apiRoute, fnDir)()
+            iter(apiRoute, fnDir)(res, req, db)
 
-            res.writeHead(200, {'Content-Type': "application/json"})
-            res.end()
-
-        } else if (validFileRequestUrl.test(req.url)) { // Resource call todo: regex check
+        } else if (validFileRequestUrl.test(req.url)) {
 
             if (req.url === "/") {
                 var fileDir = ['root.html']
