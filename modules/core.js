@@ -3,39 +3,21 @@ const http = require('http')
 const uuid = require('uuid').v4
 const path = require('path')
 const fs = require('fs')
+const mongoose = require('mongoose')
 
 // Modules
 const mimeTypes = require('./../mimetypes.json')
+const apiRoute = require('./api.js')
 
-const apiRoute = {
-    'v1': {
-        'article': {
-            'GET': (req, res, db) => {
-                console.log('v1 article get');
-            },
-            '_index': {
-                'GET': (req, res, db) => {
-                    console.log('v1 article index get');
-                },
-                "comment": {
-                    '_index': {
-                        'GET': (req, res, db) => {
-                            console.log('v1 article index comment index get');
-                        }
-                    }
-                },
-                'customFunction': {
-                    'GET': (req, res, db) => {
-                        console.log('v1 article index customFunction');
-                    }
-                }
-            },
-            'customFunction': (req, res, db) => {
-                console.log('v1 article customFunction');
-            }
-        }
-    }
-}
+
+mongoose.connect('mongodb://localhost/nosql-node-backend', { useNewUrlParser: true, useUnifiedTopology: true});
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  // we're connected!
+});
+
+
 
 function objectifyDirectory(dir) {
     let object = {}
@@ -58,21 +40,28 @@ function parseCookie(cookie) {
     return Object.fromEntries(cookie.split(';').map((entry) => entry.split('=')))
 }
 
+const validFileRequestUrl = /^\/([\w]+\/)*(([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)|([\w\.\_\-]+\.\w+))?$/
+const validApiRequestUrl = /^\/api\/([\w-_]+\/)+([\w-_]+)(\?[\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+(\&([\w_]+\=[\-\_\.\!\~\*\'\(\)\w\%]+))*)?$/
+
 http.createServer((req, res) => {
     try {
-        if (req.headers.cookie !== undefined) {
-            const cookie = parseCookie(req.headers.cookie)
-            if (tmp.sessionIds.indexOf(cookie.session_id) !== -1) {// Valid session_id
-            } else { // Invalid / expired session_id
+        if (validApiRequestUrl.test(req.url) || validFileRequestUrl.test(req.url) ) {
+            if (req.headers.cookie !== undefined) {
+                const cookie = parseCookie(req.headers.cookie)
+                if (tmp.sessionIds.indexOf(cookie.session_id) !== -1) {// Valid session_id
+                } else { // Invalid / expired session_id
+                    tmp.sessionIds.push(uuid())
+                    res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1]+'; path=/')
+                } 
+            } else { // No session_id
                 tmp.sessionIds.push(uuid())
-                res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
-            } 
-        } else { // No session_id
-            tmp.sessionIds.push(uuid())
-            res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1])
+                res.setHeader('Set-Cookie', 'session_id='+tmp.sessionIds[tmp.sessionIds.length - 1]+'; path=/')
+            }
+        } else {
+            throw [400, "Invalid URL"];
         }
         
-        if (req.url.slice(0, 5) === '/api/') { // Api call todo: regex check
+        if (validApiRequestUrl.test(req.url)) {
 
             let fnDir = req.url.match(/\/((\/?[\w]+)+)\??.*/)[1].split('/').slice(1)
             fnDir = fnDir.map(call => /\w*[A-Z][0-9]\w*/.test(call) ? '_index' : call)
@@ -82,12 +71,9 @@ http.createServer((req, res) => {
                 return typeof obj[dirs[0]] === "object" ? iter(obj[dirs[0]], dirs.slice(1)) : obj[dirs[0]]
             }
 
-            iter(apiRoute, fnDir)()
+            iter(apiRoute, fnDir)(res, req, db)
 
-            res.writeHead(200, {'Content-Type': "application/json"})
-            res.end()
-
-        } else if (1) { // Resource call todo: regex check
+        } else if (validFileRequestUrl.test(req.url)) {
 
             if (req.url === "/") {
                 var fileDir = ['root.html']
@@ -113,12 +99,11 @@ http.createServer((req, res) => {
             } catch(err) {
                 throw 404
             }
+            if (file === undefined) throw 404;
 
             res.setHeader('Content-Type', mimeTypes[fileDir[fileDir.length - 1].match(/\.\w+$/)[0]])
             res.end(file)
 
-        } else { // Invalid call!
-            throw 400;
         }
 
     } catch(err) {
@@ -127,12 +112,11 @@ http.createServer((req, res) => {
             console.error(err)
         } else {
             error = Number.isInteger(err) ? [err] : err
-            console.error("Error "+error[0]+': '+error[1])
+            console.error(req.url+" "+error[0]+(error[1] ? " "+error[1] : "" ))
         }
         res.writeHead(...error)
         res.end()
     }
-
 }).listen(5000);
 
 console.log('[running] Hosting on http://localhost:5000');
