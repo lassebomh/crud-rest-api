@@ -1,30 +1,21 @@
 
-module.exports = {
-    'v1': {
-        'article': {
-            'GET': (req, res, db) => {
-                console.log('v1 article get');
-            },
-            '_index': {
-                'GET': (req, res, db) => {
-                    console.log('v1 article index get');
-                },
-                "comment": {
-                    '_index': {
-                        'GET': (req, res, db) => {
-                            console.log('v1 article index comment index get');
-                        }
-                    }
-                },
-                'customFunction': {
-                    'GET': (req, res, db) => {
-                        console.log('v1 article index customFunction');
-                    }
-                }
-            },
-            'customFunction': (req, res, db) => {
-                console.log('v1 article customFunction');
+class Result {
+    constructor(status, statusText, headers, body)
+}
+
+api = {
+    v1: async (req, res, db, options) => {
+        if (1) {
+            return {value: 200, status: 200, statusText: 'OK'}
+        } else {
+            return {
+                article: 4
             }
         }
     }
+}
+
+async function main() {
+    console.log(await api.v1);
+    
 }
