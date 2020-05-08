@@ -7,10 +7,8 @@ module.exports = (pass) => {
         "article": {
             ":article_id": {
                 'comment': {
-                    ':comment_id': {
-                        "GET": async (pass) => {
-                            return `<div>hello world! The article ID is <b>"${pass.article_id}"</b> and the comment ID is <b>"${pass.comment_id}"</b>! Thanks</div>`
-                        }
+                    ':comment_id':  async (pass) => {
+                        return `<div>hello world! The article ID is <b>"${pass.options.article_id}"</b> and the comment ID is <b>"${pass.options.comment_id}"</b>! Thanks</div>`
                     }
                 }
             }
