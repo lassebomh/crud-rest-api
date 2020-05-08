@@ -1,8 +1,10 @@
 
+// NPM modules
 const http = require('http')
 const fs = require('fs')
 const mongoose = require('mongoose')
 
+// Local modules
 const route = require('./modules/route.js')
 const secret = require('./secret.json')
 
@@ -32,25 +34,22 @@ async function traverse(terrain, map, inputs) {
 
 server = http.createServer(async (req, res) => {
     try {
-        let reqLocation = req.url.match(/\/((\/?[^\/]+)*)\??.*/)[1].split('/')
+        let reqLocation = req.url.match(/\/((\/?[^\/\?]+)*)\??.*/)[1].split('/')
         reqLocation.push(req.method)
         
-        let props = {req: req,
-                     res: res,
-                     db: db}
+        let props = {req: req, res: res, db: db}
 
         try {
             props.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => props[e[0]] = JSON.parse(decodeURIComponent(e[1])))
             
             let re = props.req.url.match(/.+\?(.+)$/)
-            if(re) re[1].split('&').map((entry) => entry.split('=')).map((e) => props[e[0]] = !JSON.parse(decodeURIComponent(e[1])))
+            if(re) re[1].split('&').map((entry) => entry.split('=')).map((e) => props[e[0]] = JSON.parse(decodeURIComponent(e[1])))
     
         } catch (e) {
-            throw e instanceof URIError ? 400 : e
+            throw e instanceof URIError | e instanceof SyntaxError ? 400 : e
         }
 
         let body = await traverse(route, reqLocation, props)
-        
         if (body === undefined) throw 404
         
         res.end(body)
@@ -70,7 +69,7 @@ server = http.createServer(async (req, res) => {
 
 console.log(`        | Trying to connect to database at "${secret.db.url}"`);
 db.once('open', () => {
-    console.log(`     OK | Connected to database at "${secret.db.url}"`);
+    console.log(`     OK | Connected to database`);
     server.listen(secret.hosting.port)
     console.log(`     OK | Hosting server at "http://localhost:${secret.hosting.port}"`);
 });
