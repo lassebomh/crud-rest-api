@@ -22,7 +22,7 @@ async function traverse(terrain, map, inputs) {
                 indexed = Object.keys(terrain)[i]
                 if (Object.keys(terrain)[i][0] === ":") {
                     findResult = terrain[indexed]
-                    inputs[indexed.slice(1)] = map[0]
+                    inputs.options[indexed.slice(1)] = map[0]
                     break
                 }
             }
@@ -37,19 +37,19 @@ server = http.createServer(async (req, res) => {
         let reqLocation = req.url.match(/\/((\/?[^\/\?]+)*)\??.*/)[1].split('/')
         reqLocation.push(req.method)
         
-        let props = {req: req, res: res, db: db}
+        let pass = {req: req, res: res, db: db, options: {}, cookies: {}}
 
         try {
-            props.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => props[e[0]] = JSON.parse(decodeURIComponent(e[1])))
+            pass.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => pass.cookies[e[0]] = JSON.parse(decodeURIComponent(e[1])))
             
-            let re = props.req.url.match(/.+\?(.+)$/)
-            if(re) re[1].split('&').map((entry) => entry.split('=')).map((e) => props[e[0]] = JSON.parse(decodeURIComponent(e[1])))
+            let re = pass.req.url.match(/.+\?(.+)$/)
+            if(re) re[1].split('&').map((entry) => entry.split('=')).map((e) => pass.options[e[0]] = JSON.parse(decodeURIComponent(e[1])))
     
         } catch (e) {
             throw e instanceof URIError | e instanceof SyntaxError ? 400 : e
         }
 
-        let body = await traverse(route, reqLocation, props)
+        let body = await traverse(route, reqLocation, pass)
         if (body === undefined) throw 404
         
         res.end(body)
