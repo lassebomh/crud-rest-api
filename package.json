@@ -2,7 +2,7 @@
   "name": "crud-rest-api",
   "version": "1.0.0",
   "description": "",
-  "main": "./modules/core.js",
+  "main": "./server.js",
   "scripts": {
     "dev": "nodemon -e js,json,html,css"
   },

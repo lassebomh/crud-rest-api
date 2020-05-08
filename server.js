@@ -1,9 +1,13 @@
 
 const http = require('http')
-const uuid = require('uuid').v4
 const fs = require('fs')
+const mongoose = require('mongoose')
 
 const route = require('./modules/route.js')
+const secret = require('./secret.json')
+
+mongoose.connect(secret.db.url, { useNewUrlParser: true, useUnifiedTopology: true, user: secret.db.user, pass: secret.db.user});
+var db = mongoose.connection;
 
 async function traverse(terrain, map, inputs) {
 
@@ -26,15 +30,14 @@ async function traverse(terrain, map, inputs) {
     } else return terrain
 }
 
-http.createServer(async (req, res) => {
-
+server = http.createServer(async (req, res) => {
     try {
         let reqLocation = req.url.match(/\/((\/?[^\/]+)*)\??.*/)[1].split('/')
         reqLocation.push(req.method)
         
         let props = {req: req,
                      res: res,
-                     db: 420}
+                     db: db}
 
         try {
             props.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => props[e[0]] = JSON.parse(decodeURIComponent(e[1])))
@@ -63,5 +66,11 @@ http.createServer(async (req, res) => {
         res.writeHead(...error)
         res.end()
     }
-}).listen(5000);
-console.log('[running] Hosting on http://localhost:5000');
+})
+
+console.log(`        | Trying to connect to database at "${secret.db.url}"`);
+db.once('open', () => {
+    console.log(`     OK | Connected to database at "${secret.db.url}"`);
+    server.listen(secret.hosting.port)
+    console.log(`     OK | Hosting server at "http://localhost:${secret.hosting.port}"`);
+});
