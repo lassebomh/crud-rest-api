@@ -1,14 +1,7 @@
 
 const http = require('http')
-
-
-class Props {
-    constructor (req, res, db) {
-        this.req = req
-        this.res = res
-        this.db = db
-    }
-}
+const uuid = require('uuid').v4
+const fs = require('fs')
 
 async function responses(props) {
     props.res.setHeader('Set-Cookie', 'session_id=42069420; path=/')
@@ -16,9 +9,10 @@ async function responses(props) {
     return {
         ":article_id": {
             'comment': {
-                ':comment_id': async (props) => {
-                    props.res.writeHead(200)
-                    props.res.write(`Article ${props.article_id}. Comment ${props.comment_id}`)
+                ':comment_id': {
+                    "GET": async (props) => {
+                        return ''
+                    }
                 }
             }
         }
@@ -29,7 +23,7 @@ async function traverse(terrain, map, inputs) {
 
     terrain = typeof terrain === "function" ? await terrain(inputs) : terrain
     
-    if (typeof terrain === "object") {
+    if (typeof terrain === "object" && !(terrain instanceof Buffer)) {
         let findResult = terrain[map[0]]
         if (findResult === undefined) {
             for (let i = 0; i < Object.keys(terrain).length; i++) {
@@ -41,34 +35,50 @@ async function traverse(terrain, map, inputs) {
                 }
             }
         }
-        // console.log(terrain, map);
-        await traverse(findResult, map.slice(1), inputs)
+        return await traverse(findResult, map.slice(1), inputs)
         
-    } else if (terrain === undefined) {
-        // console.log(terrain, map);
-        
-    }
+    } else return terrain
 }
 
 http.createServer(async (req, res) => {
 
-    let reqLocation = req.url.match(/\/((\/?[\w]+)*)\??.*/)[1].split('/')   
-    
     try {
-        await traverse(responses, reqLocation, new Props(req, res, 420))
+        let reqLocation = req.url.match(/\/((\/?[^\/]+)*)\??.*/)[1].split('/')
+        reqLocation.push(req.method)
+        
+        let props = {req: req,
+                     res: res,
+                     db: 420}
+
+        try {
+            props.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => props[e[0]] = JSON.parse(decodeURIComponent(e[1])))
+            
+            let re = props.req.url.match(/.+\?(.+)$/)
+            if(re) re[1].split('&').map((entry) => entry.split('=')).map((e) => props[e[0]] = !JSON.parse(decodeURIComponent(e[1])))
+    
+        } catch (e) {
+            throw e instanceof URIError ? 400 : e
+        }
+
+        let body = await traverse(responses, reqLocation, props)
+        
+        console.log(body);
+        if (body === undefined) {
+            throw 404
+        }
+        
+        res.end(body)
+
     } catch(e) {
         let error = [500]
         if (e instanceof Error) {
             console.error(e)
         } else {
             error = Number.isInteger(e) ? [e] : e
-            console.error(req.url+" "+error[0]+(error[1] ? " "+error[1] : "" ))
+            console.error(error[0]+(error[1] ? " "+error[1] : "" + " " + req.url))
         }
         res.writeHead(...error)
         res.end()
     }
-
-    res.end()
-
 }).listen(5000);
 console.log('[running] Hosting on http://localhost:5000');
