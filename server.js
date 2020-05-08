@@ -3,21 +3,7 @@ const http = require('http')
 const uuid = require('uuid').v4
 const fs = require('fs')
 
-async function responses(props) {
-    props.res.setHeader('Set-Cookie', 'session_id=42069420; path=/')
-
-    return {
-        ":article_id": {
-            'comment': {
-                ':comment_id': {
-                    "GET": async (props) => {
-                        return ''
-                    }
-                }
-            }
-        }
-    }
-}
+const route = require('./modules/route.js')
 
 async function traverse(terrain, map, inputs) {
 
@@ -60,12 +46,9 @@ http.createServer(async (req, res) => {
             throw e instanceof URIError ? 400 : e
         }
 
-        let body = await traverse(responses, reqLocation, props)
+        let body = await traverse(route, reqLocation, props)
         
-        console.log(body);
-        if (body === undefined) {
-            throw 404
-        }
+        if (body === undefined) throw 404
         
         res.end(body)
 
