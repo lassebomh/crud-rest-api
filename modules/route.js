@@ -1,11 +1,12 @@
 const uuid = require('uuid').v4
+const fs = require('fs')
 
 module.exports = (pass) => {
-    pass.res.setHeader('Set-Cookie', 'session_id=123000123; path=/')
+    pass.res.setHeader('Set-Cookie', 'session_id=123000123; path=/; sameSite=strict')
 
     return {
         "GET": async (pass) => {
-            return "<div>computer stuff</div>"
+            return fs.readFileSync('./website.html')
         },
         "article": {
             ":article_id": {
