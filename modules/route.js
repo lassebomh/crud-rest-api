@@ -1,3 +1,6 @@
+
+// This is a basic example of a route
+
 const uuid = require('uuid').v4
 const fs = require('fs')
 
@@ -13,7 +16,7 @@ module.exports = (pass) => {
                 'comment': {
                     ':comment_id': {
                         "GET": async (pass) => {
-                            return `<div>hello world! The article ID is <b>"${pass.options.article_id}"</b> and the comment ID is <b>"${pass.options.comment_id}"</b>! Thanks</div>`
+                            return `<div>hello world! The article ID is <b>"${pass.options.article_id}"</b> and the comment ID is <b>"${pass.options.comment_id}"</b>! The cookie ${pass.cookie.session_id}. Thanks</div>`
                         }
                     }
                 }
