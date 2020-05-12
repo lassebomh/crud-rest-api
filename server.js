@@ -12,6 +12,12 @@ const secret = require('./secret.json')
 mongoose.connect(secret.db.url, { useNewUrlParser: true, useUnifiedTopology: true, user: secret.db.user, pass: secret.db.user});
 var db = mongoose.connection;
 
+const errorCodeColors = {
+    "2": "\x1b[32m",
+    "4": "\x1b[33m",
+    "5": "\x1b[31m"
+}
+
 async function traverse(terrain, map, pass) {
 
     terrain = typeof terrain === "function" ? await terrain(pass) : terrain
@@ -63,19 +69,29 @@ server = http.createServer(async (req, res) => {
     } catch(e) {
         let error = [500]
         if (e instanceof Error) {
-            console.error(e)
+            var errorText = e
         } else {
             error = Number.isInteger(e) ? [e] : e
-            console.error("    "+error[0]+" | "+(error[1] ? " "+error[1]+ " " : ""  + req.url))
         }
         res.writeHead(...error)
         res.end()
     }
+    console.log("    "
+        + errorCodeColors[String(res.statusCode)[0]]
+        + res.statusCode
+        + "\x1b[0m | "
+        + ((res.statusMessage) ? (res.statusMessage+" "+" ".repeat(30 - res.statusMessage.length)) : " ".repeat(30))
+        + (req.method+" "+" ".repeat(7 - req.method.length))
+        + req.url)
+    if (errorText) console.error(errorText)
+    })
 })
 
 console.log(`        | Trying to connect to database at "${secret.db.url}"`);
 db.once('open', () => {
-    console.log(`     OK | Connected to database`);
+    console.log("\x1b[32m", `    OK\x1b[0m | Connected to database`);
     server.listen(secret.hosting.port)
-    console.log(`     OK | Hosting server at "http://localhost:${secret.hosting.port}"`);
-});});
+    console.log("\x1b[32m", `    OK\x1b[0m | Hosting server at "http://localhost:${secret.hosting.port}"`);
+    console.log("   -----|");
+    init(db)
+});
