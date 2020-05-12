@@ -9,7 +9,8 @@ const r = require('./modules/route.js')
 const [init, route] = [r.init, r.route]
 const secret = require('./secret.json')
 
-mongoose.connect(secret.db.url, { useNewUrlParser: true, useUnifiedTopology: true, user: secret.db.user, pass: secret.db.user});
+mongoose.connect(secret.db.url, {useNewUrlParser: true, useUnifiedTopology: true, user: secret.db.user, pass: secret.db.user});
+mongoose.set('useFindAndModify', false);
 var db = mongoose.connection;
 
 const errorCodeColors = {
@@ -40,6 +41,9 @@ async function traverse(terrain, map, pass) {
 }
 
 server = http.createServer(async (req, res) => {
+    let req_body = []
+    req.on('data', chunk => {req_body.push(chunk)})
+    req.on('end', async () => {
     try {
         let reqLocation = req.url.match(/\/((\/?[^\/\?]+)*)\??.*/)[1].split('/')
         reqLocation.push(req.method)
