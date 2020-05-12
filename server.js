@@ -44,54 +44,54 @@ server = http.createServer(async (req, res) => {
     let req_body = []
     req.on('data', chunk => {req_body.push(chunk)})
     req.on('end', async () => {
-    try {
-        let reqLocation = req.url.match(/\/((\/?[^\/\?]+)*)\??.*/)[1].split('/')
-        reqLocation.push(req.method)
-        reqLocation = reqLocation.filter((e) => e !== "")
-        
-        let pass = {req: req,
-                    res: res,
-                    db: db,
-                    options: {body: req_body},
-                    cookie: {}}
-
         try {
-            if (pass.req.headers.cookie) {
-                pass.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => {
-                    pass.cookie[e[0]] = JSON.parse(decodeURIComponent(e[1]))
-                })
-            }
+            let reqLocation = req.url.match(/\/((\/?[^\/\?]+)*)\??.*/)[1].split('/')
+            reqLocation.push(req.method)
+            reqLocation = reqLocation.filter((e) => e !== "")
             
-            let re = pass.req.url.match(/.+\?(.+)$/)
-            if(re) re[1].split('&').map((entry) => entry.split('=')).map((e) => pass.options[e[0]] = JSON.parse(decodeURIComponent(e[1])))
-    
-        } catch (e) {
-            throw e instanceof URIError | e instanceof SyntaxError ? 400 : e
-        }
+            let pass = {req: req,
+                        res: res,
+                        db: db,
+                        options: {body: req_body},
+                        cookie: {}}
 
-        let body = await traverse(route, reqLocation, pass)
-        if (body === undefined) throw 404
+            try {
+                if (pass.req.headers.cookie) {
+                    pass.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => {
+                        pass.cookie[e[0]] = JSON.parse(decodeURIComponent(e[1]))
+                    })
+                }
+                
+                let re = pass.req.url.match(/.+\?(.+)$/)
+                if(re) re[1].split('&').map((entry) => entry.split('=')).map((e) => pass.options[e[0]] = JSON.parse(decodeURIComponent(e[1])))
         
-        res.end(body)
+            } catch (e) {
+                throw e instanceof URIError | e instanceof SyntaxError ? 400 : e
+            }
 
-    } catch(e) {
-        let error = [500]
-        if (e instanceof Error) {
-            var errorText = e
-        } else {
-            error = Number.isInteger(e) ? [e] : e
+            let body = await traverse(route, reqLocation, pass)
+            if (body === undefined) throw 404
+            
+            res.end(body)
+
+        } catch(e) {
+            let error = [500]
+            if (e instanceof Error) {
+                var errorText = e
+            } else {
+                error = Number.isInteger(e) ? [e] : e
+            }
+            res.writeHead(...error)
+            res.end()
         }
-        res.writeHead(...error)
-        res.end()
-    }
-    console.log("    "
-        + errorCodeColors[String(res.statusCode)[0]]
-        + res.statusCode
-        + "\x1b[0m | "
-        + ((res.statusMessage) ? (res.statusMessage+" "+" ".repeat(30 - res.statusMessage.length)) : " ".repeat(30))
-        + (req.method+" "+" ".repeat(7 - req.method.length))
-        + req.url)
-    if (errorText) console.error(errorText)
+        console.log("    "
+            + errorCodeColors[String(res.statusCode)[0]]
+            + res.statusCode
+            + "\x1b[0m | "
+            + ((res.statusMessage) ? (res.statusMessage+" "+" ".repeat(30 - res.statusMessage.length)) : " ".repeat(30))
+            + (req.method+" "+" ".repeat(7 - req.method.length))
+            + req.url)
+        if (errorText) console.error(errorText)
     })
 })
 
