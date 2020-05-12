@@ -4,9 +4,13 @@
 const uuid = require('uuid').v4
 const fs = require('fs')
 
-module.exports = (pass) => {
-    pass.res.setHeader('Set-Cookie', 'session_id=123000123; path=/; sameSite=strict')
+exports.init = (db) => {
+    
+    // This runs once
+}
 
+exports.route = (pass) => {
+    pass.res.setHeader('Set-Cookie', 'session_id=102030; path=/; sameSite=strict')
     return {
         "GET": async (pass) => {
             return fs.readFileSync('./website.html')

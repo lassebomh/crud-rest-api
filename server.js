@@ -5,7 +5,8 @@ const fs = require('fs')
 const mongoose = require('mongoose')
 
 // Local modules
-const route = require('./modules/route.js')
+const r = require('./modules/route.js')
+const [init, route] = [r.init, r.route]
 const secret = require('./secret.json')
 
 mongoose.connect(secret.db.url, { useNewUrlParser: true, useUnifiedTopology: true, user: secret.db.user, pass: secret.db.user});
@@ -77,4 +78,4 @@ db.once('open', () => {
     console.log(`     OK | Connected to database`);
     server.listen(secret.hosting.port)
     console.log(`     OK | Hosting server at "http://localhost:${secret.hosting.port}"`);
-});
+});});
