@@ -45,12 +45,16 @@ server = http.createServer(async (req, res) => {
         reqLocation.push(req.method)
         reqLocation = reqLocation.filter((e) => e !== "")
         
-        let pass = {req: req, res: res, db: db, options: {}, cookies: {}}
+        let pass = {req: req,
+                    res: res,
+                    db: db,
+                    options: {body: req_body},
+                    cookie: {}}
 
         try {
             if (pass.req.headers.cookie) {
                 pass.req.headers.cookie.split(';').map((entry) => entry.split('=')).map((e) => {
-                    pass.cookies[e[0]] = JSON.parse(decodeURIComponent(e[1]))
+                    pass.cookie[e[0]] = JSON.parse(decodeURIComponent(e[1]))
                 })
             }
             
