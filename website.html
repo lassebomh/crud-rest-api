@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test site</title>
+</head>
+<body>
+    <div>
+        <h1>Interfacing Test</h1>
+        <div>
+            Welcome. This is a test website.
+        </div>
+        <div id="content">
+
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    (async () => {
+        let cnt = document.getElementById('content')
+            
+        let res = await fetch('/article/articletest123/comment/commentnumber3000')
+        cnt.innerHTML = await res.text();
+    })()
+</script>
