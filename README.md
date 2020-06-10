@@ -33,7 +33,8 @@ Here is an example of what the API route could look like in practice:
     "listing": {
         ":listing_id": {
             "GET": async (pass) => {
-                // This serves some html on "www.example.com/listing/abc123". The id is saved to pass.options.listing_id. 
+                // This serves some html on "www.example.com/listing/abc123".
+                // The id is saved to pass.options.listing_id. 
                 return `<div>The requested listing id is: ${pass.options.listing_id}.</div>`
             }
         }
