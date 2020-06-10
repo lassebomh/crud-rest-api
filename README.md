@@ -25,29 +25,16 @@ Another advantage is that we now properly communicate what the browser is allowe
 
 Here is an example of what the API route could look like in practice:
 ```
-  Api object                                |  Url                                  |  Method
---------------------------------------------|---------------------------------------|-----------------
-'article': {
-    '_index': {
-        'GET': (...) => {                      /api/v1/article/N8k2                     GET
-
-        },
-        "comment": {
-            '_index': {
-                'GET': (...) => {              /api/v1/article/N8k2/comment/3           GET
-
-                },
-                'PUT': (...) => {              /api/v1/article/N8k2/comment/3           PUT
-
-                },
-                'DELETE': (...) => {           /api/v1/article/N8k2/comment/3           DELETE
-
-                }
-            },
-            'new': {
-                'POST': (...) => {             /api/v1/article/N8k2/comment/new         POST
-
-                }
+{
+    "GET": async (pass) => {
+        // This serves website.html on the root directory "www.example.com"
+        return fs.readFileSync('./website.html')
+    },
+    "listing": {
+        ":listing_id": {
+            "GET": async (pass) => {
+                // This serves some html on "www.example.com/listing/abc123". The id is saved to pass.options.listing_id. 
+                return `<div>The requested listing id is: ${pass.options.listing_id}.</div>`
             }
         }
     }
